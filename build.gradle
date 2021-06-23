@@ -1,0 +1,70 @@
+plugins {
+    id 'java'
+}
+
+apply plugin: 'java'
+apply plugin: 'idea'
+
+sourceCompatibility = 1.8
+
+group 'com.mit'
+version '1.0-SNAPSHOT'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+//    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.7.0'
+//    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.7.0'
+    implementation group: 'junit', name: 'junit', version: '4.12'
+    // https://mvnrepository.com/artifact/org.apache.hadoop/hadoop-client
+    implementation group: 'org.apache.hadoop', name: 'hadoop-client', version: '3.1.3'
+    // https://mvnrepository.com/artifact/org.slf4j/slf4j-log4j12
+    implementation group: 'org.slf4j', name: 'slf4j-log4j12', version: '1.7.30'
+}
+
+test {
+    useJUnitPlatform()
+}
+
+repositories {
+    maven {
+        url 'http://maven.aliyun.com/nexus/content/groups/public/'
+    }
+}
+
+task createDirs {
+    sourceSets*.java.srcDirs*.each {
+        it.mkdirs()
+    }
+    sourceSets*.resources.srcDirs*.each{
+        it.mkdirs()
+    }
+}
+
+[compileJava, javadoc, compileTestJava]*.options*.encoding = 'UTF-8'
+
+// 需要修改 'Main-Class'
+jar {
+    String someString = ''
+    configurations.runtime.each {someString = someString + " lib//"+it.name}
+    manifest {
+        attributes 'Main-Class': 'AttackDataInterceptor'
+        attributes 'Class-Path': someString
+    }
+}
+
+//清除上次的编译过的文件
+task clearPj(type:Delete){
+    delete 'build','target'
+}
+task copyJar(type:Copy){
+    from configurations.runtime
+    into ('build/libs/lib')
+}
+//把JAR复制到目标目录
+task release(type: Copy,dependsOn: [build,copyJar]) {
+// from 'conf'
+// into ('build/libs/eachend/conf') // 目标位置
+}
